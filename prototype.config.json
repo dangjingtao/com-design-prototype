@@ -18,7 +18,7 @@
   },
   "versioning": {
     "strategy": "semver",
-    "currentVersion": "0.3.0",
+    "currentVersion": "0.3.1",
     "initialProjectVersion": "0.1.0",
     "versionFile": "VERSION",
     "changelogFile": "CHANGELOG.md"
