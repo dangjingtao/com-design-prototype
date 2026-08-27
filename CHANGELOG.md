@@ -2,6 +2,23 @@
 
 All notable changes to Com Design Prototype are recorded here.
 
+## [0.4.0] - 2026-08-27
+
+### Added
+
+- Structured contributor identity contract in `prototype.config.json`
+- Verified GitHub binding for Tomz as `@dangjingtao`
+- Explicit AI collaborator identity for Mira without a fabricated GitHub account
+- `docs/governance/contributors.md` identity and attribution rules
+- `daily-report-review` Skill for independently checking and receiving daily reports
+- Daily report attribution by verified GitHub login when available
+
+### Changed
+
+- Daily Report Skill now distinguishes verified GitHub authors from unverified Git name/email fallbacks
+- AI Skill Interview now confirms project contributors, GitHub identities, daily-report generation and daily-report review
+- Generated projects carry contributor identity metadata and both daily report skills
+
 ## [0.3.1] - 2026-08-27
 
 ### Added
