@@ -3,16 +3,19 @@
 > 适用于由 `mira create prototype` 生成的业务原型项目。
 >
 > Authors: Tomz <dangjingtao@gmail.com> & Mira <mira@tomz.io>
+>
+> GitHub identity: Tomz → `@dangjingtao` (verified)；Mira → AI collaborator, no GitHub account.
 
 ## 1. 这套项目是怎么工作的
 
-Com Design Prototype 不是普通前端脚手架。它把产品讨论、AI 协作、任务台账、版本控制、双端原型、Review、日报和 CI/CD 放在同一个 Git 项目里。
+Com Design Prototype 不是普通前端脚手架。它把产品讨论、AI 协作、任务台账、版本控制、贡献者身份、双端原型、Review、日报、日报查收和 CI/CD 放在同一个 Git 项目里。
 
 默认工作闭环：
 
 ```text
 项目初始化
 → AI Skill Interview
+→ GitHub / Contributor Identity
 → 产品事实 / Product Brief
 → 任务台账 / Txxx
 → dev 施工
@@ -21,10 +24,11 @@ Com Design Prototype 不是普通前端脚手架。它把产品讨论、AI 协�
 → 用户或授权评审者验收
 → PASS
 → 日报
+→ 日报查收
 → prod
 ```
 
-这套流程的核心原则只有一句：**聊天不是事实源，任务卡不是完成证据，CI 绿也不等于产品验收通过。**
+这套流程的核心原则只有一句：**聊天不是事实源，任务卡不是完成证据，Git name/email 不是 GitHub 身份，CI 绿也不等于产品验收通过。**
 
 ---
 
@@ -45,6 +49,13 @@ mira create prototype demo \
   --deploy=github,cloudflare
 ```
 
+CLI 初始化阶段会确认：
+
+- Project name：目录 / npm / 工程名
+- Product title：面向人的产品展示名
+- Targets：Mobile / PC
+- Deployment：GitHub Pages / Cloudflare
+
 生成后的业务项目默认从自己的 `0.1.0` 开始，并以 `dev` 作为初始工作分支。
 
 ### 2.2 第一次把项目交给 AI
@@ -54,7 +65,7 @@ mira create prototype demo \
 ```text
 请先按 AGENTS.md 初始化这个项目。
 先读取项目规则和现状，不要施工。
-通过交互式问答和我确认 AI Skills；如果项目已有 GitHub 仓库，我会直接把地址贴给你。
+通过交互式问答和我确认 AI Skills、项目名、GitHub 仓库和 Contributors；如果项目已有 GitHub 仓库，我会直接把地址贴给你。
 ```
 
 AI 应先读取：
@@ -63,9 +74,10 @@ AI 应先读取：
 2. `VERSION`
 3. `docs/product/00-product-brief.md`
 4. `docs/workbench/00-work-ledger.md`
-5. `docs/ai/skills.md`
-6. 当前任务卡（如有）
-7. 本说明书
+5. `docs/governance/contributors.md`
+6. `docs/ai/skills.md`
+7. 当前任务卡（如有）
+8. 本说明书
 
 如果 AI 没读规则就直接开始改代码，应立即叫停。
 
@@ -75,13 +87,31 @@ AI 应先读取：
 
 `docs/ai/skills.md` 初始状态是 `PENDING`。
 
-Skill Interview 的目的不是填表，而是让 AI 与用户确认：**这个项目里 AI 到底能做什么、不能做什么、需要什么工具、承担什么职责。**
+Skill Interview 的目的不是填表，而是让 AI 与用户确认：**这个项目是谁、在哪个仓库、有哪些贡献者、AI 到底能做什么、不能做什么、需要什么工具。**
 
 AI 应采用自然问答，每次只确认 1–2 个关键问题，不要一次抛几十项。
 
-至少确认以下内容。
+### 3.1 Project name / title
 
-### 3.1 GitHub repository
+AI 先核对：
+
+```json
+{
+  "project": {
+    "name": "demo",
+    "title": "Demo Product"
+  }
+}
+```
+
+如果初始化时名字已经正确，不要重复要求用户填写。
+
+如果用户修改展示名称，区分：
+
+- `project.name`：工程标识，谨慎改动
+- `project.title`：产品展示名称，可以按产品决定修改
+
+### 3.2 GitHub repository
 
 如果已有仓库，用户直接在聊天里粘贴 URL：
 
@@ -102,7 +132,38 @@ AI 应校验后写入：
 
 如果还没有仓库，保持 `url: null` 即可，不阻塞产品工作。
 
-### 3.2 AI 角色
+### 3.3 Contributors / GitHub Identity
+
+身份规则见：
+
+```text
+docs/governance/contributors.md
+```
+
+默认 Seed 作者身份：
+
+```text
+Tomz <dangjingtao@gmail.com>
+→ type: human
+→ role: owner
+→ GitHub: @dangjingtao
+→ verified: true
+
+Mira <mira@tomz.io>
+→ type: ai-collaborator
+→ role: co-author
+→ GitHub: none
+```
+
+AI 应询问这是否仍适用于当前业务项目；如果还有其他 human contributor，要求用户提供 GitHub login 或 profile URL。
+
+只有实际校验过 GitHub 账号后，才能把 `github.verified` 写为 `true`。
+
+**Git commit 的 name/email 不是 GitHub identity。** 不允许因为名字一样或邮箱一样就声明账号已验证。
+
+Mira 当前没有真实 GitHub Bot / App 账号，因此 `github` 必须保持 `null`；不得伪造 Mira GitHub 账号，也不得把其他人的 commit 归给 Mira。
+
+### 3.4 AI 角色
 
 按项目实际情况确认，例如：
 
@@ -118,8 +179,9 @@ AI 应校验后写入：
 - Git / Release
 - CI/CD / Deployment
 - Daily Report
+- Daily Report Review
 
-### 3.3 工具与连接
+### 3.5 工具与连接
 
 确认允许使用哪些外部能力，例如：
 
@@ -131,7 +193,7 @@ AI 应校验后写入：
 - MCP / Connector
 - 其他项目工具
 
-### 3.4 AI 自主权限
+### 3.6 AI 自主权限
 
 逐项确认 AI 是否可以：
 
@@ -139,6 +201,7 @@ AI 应校验后写入：
 - 修改产品文档
 - 创建 / 更新任务卡
 - 更新总台账
+- 更新 contributor identity
 - commit / push
 - 创建 PR
 - 合并 PR
@@ -148,8 +211,10 @@ AI 应校验后写入：
 - 部署 Production
 - 生成日报
 - 自动 commit / push 日报
+- 查收 / 复核日报
+- 把查收结果追加到原日报
 
-### 3.5 验证目标和禁区
+### 3.7 验证目标和禁区
 
 确认这个项目现在最重要的是验证什么，以及哪些事情明确不要做。
 
@@ -163,7 +228,7 @@ AI 应校验后写入：
 
 用户确认后，AI 才把 `docs/ai/skills.md` 改为 `CONFIRMED`。
 
-如果后续权限、工具或项目阶段发生明显变化，应改为 `REVIEW_REQUIRED` 并重新确认。
+如果后续权限、工具、repository、contributors 或项目阶段发生明显变化，应改为 `REVIEW_REQUIRED` 并重新确认。
 
 ---
 
@@ -214,7 +279,29 @@ fix/T031-empty-state
 
 ---
 
-## 5. 用户提出新需求时怎么和 AI 说
+## 5. Contributor Identity 怎么工作
+
+项目贡献者真相源：
+
+```text
+prototype.config.json.contributors
+docs/governance/contributors.md
+```
+
+日报和 Review 判断“谁产生了这次 GitHub 改动”时，按以下顺序：
+
+1. GitHub API / Connector 返回的 commit `author.login`、PR author 等平台身份。
+2. 与 `contributors[].github.login` 对照。
+3. verified login 匹配后，可显示为 `Name (@login)`。
+4. GitHub 没有关联 login 时，才退回 Git commit author name/email。
+5. 回退结果必须标记 `unverified Git identity`。
+6. bot / automation 不得归给 human contributor。
+
+Contributor 信息只做事实追溯，不用于按 commit 数、代码行数评价个人工作量。
+
+---
+
+## 6. 用户提出新需求时怎么和 AI 说
 
 最简单的说法：
 
@@ -235,7 +322,7 @@ AI 应先做三件事：
 
 ---
 
-## 6. 什么时候建任务卡
+## 7. 什么时候建任务卡
 
 工作总入口：
 
@@ -287,7 +374,7 @@ docs/workbench/tasks/
 
 ---
 
-## 7. 任务状态规则
+## 8. 任务状态规则
 
 默认状态流：
 
@@ -317,7 +404,7 @@ CI 通过、build 成功、代码已提交，都只是证据，不自动等于 P
 
 ---
 
-## 8. 让 AI 开始施工
+## 9. 让 AI 开始施工
 
 确认方案后可以说：
 
@@ -340,7 +427,7 @@ AI 开工前应检查：
 
 ---
 
-## 9. 验证要求
+## 10. 验证要求
 
 AI 不得伪造验证结果。
 
@@ -374,7 +461,7 @@ Prototype Runtime 可用于切换这些状态。
 
 ---
 
-## 10. 用户如何评审 AI 的施工
+## 11. 用户如何评审 AI 的施工
 
 可以直接说：
 
@@ -397,7 +484,7 @@ AI 的评审应尽量按这个顺序组织：
 
 ---
 
-## 11. 需求中途变化怎么办
+## 12. 需求中途变化怎么办
 
 对 AI 说：
 
@@ -418,7 +505,7 @@ AI 应：
 
 ---
 
-## 12. 版本控制
+## 13. 版本控制
 
 详细规则见：
 
@@ -446,19 +533,19 @@ CHANGELOG.md
 常见判断：
 
 - PATCH：修复、文案、样式微调、文档完善、无合同变化的工程调整
-- MINOR：新增页面、流程、状态或明显可验证能力
+- MINOR：新增页面、流程、状态、Skill 或明显可验证能力
 - MAJOR：稳定后出现不兼容的产品 / API / 数据 / 工程合同变化
 
 形成明确验收基线后可打 tag：
 
 ```bash
-git tag v0.3.0
-git push origin v0.3.0
+git tag v0.4.0
+git push origin v0.4.0
 ```
 
 ---
 
-## 13. CI/CD
+## 14. CI/CD
 
 生成项目的 CI 只围绕 `dev` / `prod`。
 
@@ -493,7 +580,7 @@ mira setup cicd
 
 凭据只从当前 shell 读取，不写入仓库。
 
-### 13.1 准备发布
+### 14.1 准备发布
 
 对 AI 说：
 
@@ -515,7 +602,7 @@ AI 应检查：
 
 ---
 
-## 14. Daily Report Skill
+## 15. Daily Report Skill
 
 Skill 文件：
 
@@ -531,16 +618,43 @@ docs/ai/skills/daily-report.md
 
 AI 默认读取当天本地时间内：
 
-- `dev` commits
+- `dev` GitHub commits
 - 当天如有发布的 `prod` commits
+- repository + contributors
 - 总台账
 - 当天涉及的 Txxx 任务卡
 - PR / CI / Review / 页面验证证据
 - 未提交工作区变化（只作为 WIP）
 
-然后做 commit ↔ task card 对账。
+然后做：
 
-### 14.1 对账规则
+```text
+commit ↔ task card ↔ contributor
+```
+
+三向对账。
+
+### 15.1 Contributor 归属
+
+如果 GitHub 返回：
+
+```text
+author.login = dangjingtao
+```
+
+并且配置中 `dangjingtao` 为 verified contributor，则日报可写：
+
+```text
+Contributor: Tomz (@dangjingtao)
+```
+
+如果只能拿到 Git author name/email，则必须写：
+
+```text
+Contributor: ... (unverified Git identity)
+```
+
+### 15.2 对账规则
 
 **有 commit + 有任务卡**  
 按实际 diff 和任务目标总结，不照抄 commit message。
@@ -557,6 +671,9 @@ AI 默认读取当天本地时间内：
 **commit 与任务卡不一致**  
 优先报告真实改动，并列入 `台账偏差`。
 
+**GitHub identity 无法验证**  
+列入 `身份待核验`，不猜账号。
+
 日报输出：
 
 ```text
@@ -569,12 +686,63 @@ docs/reports/daily/YYYY-MM-DD.md
 
 ---
 
-## 15. 常用对话指令
+## 16. Daily Report Review Skill
+
+Skill 文件：
+
+```text
+docs/ai/skills/daily-report-review.md
+```
+
+用户只需要说：
+
+```text
+查收今天日报。
+```
+
+这个 Skill 不重新生成第二份日报，而是独立回查：
+
+- 当天原日报
+- GitHub commits / PR
+- Contributor identity
+- 台账 / Txxx
+- CI / Preview / Production
+
+检查五个方面：
+
+1. 完整性
+2. 真实性
+3. 台账一致性
+4. Contributor 归属
+5. 发布 / 验证状态
+
+只允许三种查收结论：
+
+```text
+ACCEPTED
+ACCEPTED_WITH_NOTES
+NEEDS_CORRECTION
+```
+
+默认只在对话里给负责人一份简洁查收摘要。
+
+如果用户要求落档，则在**同一天原日报底部**追加 `Daily Report Review`，不默认创建 `YYYY-MM-DD.review.md`，避免第二套日报真相源。
+
+如果发现日报错误，先指出，不在未授权情况下静默改日报。
+
+---
+
+## 17. 常用对话指令
 
 日常基本只需要记住这些：
 
 ```text
-先按 AGENTS.md 初始化项目，通过问答确认 AI Skills。
+先按 AGENTS.md 初始化项目，通过问答确认项目名、GitHub、Contributors 和 AI Skills。
+```
+
+```text
+GitHub 地址是：https://github.com/xxx/xxx
+请校验后绑定到项目。
 ```
 
 ```text
@@ -598,6 +766,10 @@ Txxx 需求改了：…… 先评估影响，不要直接施工。
 ```
 
 ```text
+查收今天日报。
+```
+
+```text
 检查当前版本是否可以进入 prod。
 ```
 
@@ -607,7 +779,7 @@ Txxx 需求改了：…… 先评估影响，不要直接施工。
 
 ---
 
-## 16. AI 应该主动做什么
+## 18. AI 应该主动做什么
 
 在权限允许范围内，AI 应主动：
 
@@ -617,14 +789,16 @@ Txxx 需求改了：…… 先评估影响，不要直接施工。
 - 维护台账一致性
 - 真实执行可执行的验证
 - 报告未验证项
-- 发现 commit / 台账偏差
+- 用实际 GitHub login 做 contributor 对账
+- 发现 commit / 台账 / identity 偏差
 - 在需求变化时保留历史
 - 在发布前检查版本和验收状态
 - 在日报里只写有证据的事实
+- 查收日报时独立回查，不照抄日报结论
 
 ---
 
-## 17. AI 不应该做什么
+## 19. AI 不应该做什么
 
 默认禁止：
 
@@ -635,40 +809,48 @@ Txxx 需求改了：…… 先评估影响，不要直接施工。
 - 因 CI 绿自动把任务改 PASS
 - 把讨论、计划或 WIP 写成已完成
 - 伪造 build / test / browser verify
+- 根据 Git name/email 猜 GitHub identity
+- 把 bot / automation 提交算作 human contributor
+- 为 Mira 伪造 GitHub 账号
 - 用 commit 数量评价人员工作量
 - 删除历史任务来“整理台账”
 - 静默覆盖旧需求结论
 - 把 Cloudflare / GitHub Token 写入仓库
 - 未授权自动发布 production
+- 查收日报时静默修改原日报
 
 ---
 
-## 18. 项目出现混乱时怎么恢复
+## 20. 项目出现混乱时怎么恢复
 
 如果项目已经经历多人 / 多 AI 并行，台账和代码对不上，可以对 AI 说：
 
 ```text
 暂停新增施工。
 请按 AGENTS.md 对当前项目做一次基线恢复：
-核对 dev/prod、VERSION、Product Brief、台账、所有活跃任务卡、最近 commits 和 CI。
+核对 project name、repository、contributors、dev/prod、VERSION、Product Brief、台账、所有活跃任务卡、最近 commits 和 CI。
 把“事实、偏差、风险、待确认项”分开列出，不要直接重写历史。
 ```
 
 恢复顺序建议：
 
-1. 确认当前 repository 和分支
-2. 确认 VERSION
-3. 确认真实 commits
-4. 对账任务卡
-5. 对账 Product Brief
-6. 找出未归档改动
-7. 找出无证据 PASS
-8. 给出需要用户确认的最小问题集
-9. 用户确认后再修台账
+1. 确认当前 project name / title
+2. 确认 repository
+3. 确认 contributors / GitHub identity
+4. 确认 dev/prod
+5. 确认 VERSION
+6. 确认真实 commits
+7. 对账任务卡
+8. 对账 Product Brief
+9. 找出未归档改动
+10. 找出无证据 PASS
+11. 找出未验证 contributor 归属
+12. 给出需要用户确认的最小问题集
+13. 用户确认后再修台账
 
 ---
 
-## 19. 一次完整工作日示例
+## 21. 一次完整工作日示例
 
 ```text
 上午：
@@ -688,8 +870,12 @@ Txxx 需求改了：…… 先评估影响，不要直接施工。
 
 下班前：
 用户说“生成今天的项目日报”
-→ AI 对账 commits + ledger + T023
+→ AI 回查 GitHub @login + commits + ledger + T023
 → docs/reports/daily/YYYY-MM-DD.md
+
+用户说“查收今天日报”
+→ AI 独立回查 GitHub / contributors / task / CI
+→ ACCEPTED / ACCEPTED_WITH_NOTES / NEEDS_CORRECTION
 
 准备发布时：
 用户说“检查是否可以进入 prod”
@@ -700,15 +886,18 @@ Txxx 需求改了：…… 先评估影响，不要直接施工。
 
 ---
 
-## 20. 最终原则
+## 22. 最终原则
 
 这套项目不是为了让 AI 多写文档，而是为了保证：
 
+- 项目名和仓库身份清楚
+- 作者 / contributor 与 GitHub 账号能真实对应
 - 产品决定有地方落
 - AI 知道边界
 - 代码变化有任务来源
 - 任务状态有证据
-- 每天实际发生了什么可以追溯
+- 每天实际发生了什么可以追溯到 GitHub contributor
+- 日报有人能独立查收，而不是生成完就算结束
 - 发布前知道自己发布的是哪一版
 - 换一个 AI 也能接着干，而不是重新听一遍故事
 
