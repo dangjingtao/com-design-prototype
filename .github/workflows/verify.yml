@@ -31,7 +31,16 @@ jobs:
       - name: Smoke test Mira project generation
         shell: bash
         run: |
-          node cli/mira.mjs create prototype mira-smoke --no-install --title="Smoke Prototype" --targets=mobile --deploy=github
+          cp cli/mira.mjs /tmp/mira-smoke-cli.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          path = Path('/tmp/mira-smoke-cli.mjs')
+          text = path.read_text()
+          text = text.replace('https://github.com/dangjingtao/com-design-prototype.git', os.environ['GITHUB_WORKSPACE'])
+          path.write_text(text)
+          PY
+          node /tmp/mira-smoke-cli.mjs create prototype mira-smoke --no-install --title="Smoke Prototype" --targets=mobile --deploy=github
           test -f mira-smoke/apps/mobile/package.json
           test ! -d mira-smoke/apps/pc
           test -f mira-smoke/.github/workflows/verify.yml
