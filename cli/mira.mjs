@@ -79,6 +79,39 @@ function detectGitHubRepo(cwd) {
   return gh.status === 0 ? gh.stdout.trim() : "";
 }
 
+function writeGeneratedVerifyWorkflow(destination) {
+  const workflow = `name: Verify Prototype
+
+on:
+  pull_request:
+  push:
+    branches: [dev, prod]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install
+      - name: Check version contract
+        shell: bash
+        run: |
+          VERSION_FILE="$(tr -d '\\r\\n' < VERSION)"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          CONFIG_VERSION="$(node -p "require('./prototype.config.json').versioning.currentVersion")"
+          test "$VERSION_FILE" = "$PACKAGE_VERSION"
+          test "$VERSION_FILE" = "$CONFIG_VERSION"
+      - run: npm run typecheck
+      - run: npm run build
+`;
+  writeFileSync(resolve(destination, ".github/workflows/verify.yml"), workflow);
+}
+
 function ensureGitHubEnvironment(repo, environmentName, cwd) {
   run("gh", ["api", "--method", "PUT", `repos/${repo}/environments/${environmentName}`], cwd);
 }
@@ -163,6 +196,7 @@ async function createPrototype(nameArg, args) {
 
     rmSync(resolve(destination, ".git"), { recursive: true, force: true });
     rmSync(resolve(destination, "cli"), { recursive: true, force: true });
+    writeGeneratedVerifyWorkflow(destination);
 
     if (!targets.has("mobile")) rmSync(resolve(destination, "apps/mobile"), { recursive: true, force: true });
     if (!targets.has("pc")) rmSync(resolve(destination, "apps/pc"), { recursive: true, force: true });
