@@ -16,6 +16,14 @@ jobs:
         with:
           node-version: 24
       - run: npm install
+      - name: Check version contract
+        shell: bash
+        run: |
+          VERSION_FILE="$(tr -d '\r\n' < VERSION)"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          CONFIG_VERSION="$(node -p "require('./prototype.config.json').versioning.currentVersion")"
+          test "$VERSION_FILE" = "$PACKAGE_VERSION"
+          test "$VERSION_FILE" = "$CONFIG_VERSION"
       - run: npm run typecheck
       - run: npm run build
       - name: Check Mira CLI syntax
@@ -28,8 +36,18 @@ jobs:
           test ! -d mira-smoke/apps/pc
           test -f mira-smoke/.github/workflows/deploy-github-pages.yml
           test ! -f mira-smoke/.github/workflows/deploy-cloudflare.yml
+          test -f mira-smoke/AGENTS.md
+          test -f mira-smoke/docs/ai/skills.md
+          test -f mira-smoke/docs/governance/version-control.md
+          test "$(tr -d '\r\n' < mira-smoke/VERSION)" = "0.1.0"
+          grep -q 'Status: `PENDING`' mira-smoke/docs/ai/skills.md
           node - <<'NODE'
+          const p = require('./mira-smoke/package.json');
           const c = require('./mira-smoke/prototype.config.json');
+          if (p.version !== '0.1.0') process.exit(1);
+          if (!p.author.includes('Tomz') || !p.author.includes('Mira')) process.exit(1);
+          if (c.versioning.currentVersion !== '0.1.0') process.exit(1);
+          if (c.versioning.seedVersion !== '0.2.0') process.exit(1);
           if (!c.targets.mobile || c.targets.pc) process.exit(1);
           if (!c.deployment.githubPages.enabled) process.exit(1);
           if (c.deployment.cloudflare.enabled) process.exit(1);
