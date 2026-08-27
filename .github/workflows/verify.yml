@@ -49,12 +49,15 @@ jobs:
           test -f mira-smoke/AGENTS.md
           test -f mira-smoke/docs/ai/skills.md
           test -f mira-smoke/docs/ai/skills/daily-report.md
+          test -f mira-smoke/docs/ai/skills/daily-report-review.md
           test -f mira-smoke/docs/reports/daily/README.md
           test -f mira-smoke/docs/governance/version-control.md
+          test -f mira-smoke/docs/governance/contributors.md
           test -f mira-smoke/docs/guide/ai-collaboration-manual.md
           test "$(tr -d '\r\n' < mira-smoke/VERSION)" = "0.1.0"
           grep -q 'Status: `PENDING`' mira-smoke/docs/ai/skills.md
-          grep -q 'ai-collaboration-manual.md' mira-smoke/AGENTS.md
+          grep -q 'daily-report-review' mira-smoke/docs/ai/skills.md
+          grep -q 'contributors.md' mira-smoke/AGENTS.md
           grep -q 'branches: \[dev, prod\]' mira-smoke/.github/workflows/verify.yml
           ! grep -q 'branches: \[main' mira-smoke/.github/workflows/verify.yml
           ! grep -q 'cli/mira.mjs' mira-smoke/.github/workflows/verify.yml
@@ -63,8 +66,9 @@ jobs:
           const c = require('./mira-smoke/prototype.config.json');
           if (p.version !== '0.1.0') process.exit(1);
           if (!p.author.includes('Tomz') || !p.author.includes('Mira')) process.exit(1);
+          if (c.project.name !== 'mira-smoke' || c.project.title !== 'Smoke Prototype') process.exit(1);
           if (c.versioning.currentVersion !== '0.1.0') process.exit(1);
-          if (c.versioning.seedVersion !== '0.3.1') process.exit(1);
+          if (c.versioning.seedVersion !== '0.4.0') process.exit(1);
           if (!c.targets.mobile || c.targets.pc) process.exit(1);
           if (!c.deployment.githubPages.enabled) process.exit(1);
           if (c.deployment.cloudflare.enabled) process.exit(1);
@@ -72,5 +76,10 @@ jobs:
           if (c.workflow.developmentBranch !== 'dev' || c.workflow.productionBranch !== 'prod') process.exit(1);
           if (c.workflow.usesMainForProductWork !== false) process.exit(1);
           if (JSON.stringify(c.workflow.longLivedBranches) !== JSON.stringify(['dev', 'prod'])) process.exit(1);
+          const tomz = c.contributors.find(item => item.name === 'Tomz');
+          const mira = c.contributors.find(item => item.name === 'Mira');
+          if (!tomz || tomz.github?.login !== 'dangjingtao' || tomz.github?.verified !== true) process.exit(1);
+          if (!mira || mira.type !== 'ai-collaborator' || mira.github !== null) process.exit(1);
           if (c.workbench.dailyReport.skill !== 'docs/ai/skills/daily-report.md') process.exit(1);
+          if (c.workbench.dailyReport.reviewSkill !== 'docs/ai/skills/daily-report-review.md') process.exit(1);
           NODE
