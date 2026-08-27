@@ -6,7 +6,9 @@
 
 Authors: **Tomz <dangjingtao@gmail.com> & Mira <mira@tomz.io>**
 
-Current Seed Version: **0.3.1**
+Contributor identity: **Tomz → GitHub @dangjingtao (verified)**；**Mira → AI collaborator, no GitHub account**。
+
+Current Seed Version: **0.4.0**
 
 ## 完整说明书
 
@@ -14,16 +16,17 @@ Current Seed Version: **0.3.1**
 
 **[`docs/guide/ai-collaboration-manual.md`](docs/guide/ai-collaboration-manual.md)**
 
-它完整说明从项目初始化、AI Skill Interview、GitHub 接入、`dev/prod`、需求评审、任务卡、施工、Review、版本、CI/CD、日报到项目基线恢复的整个协作流程，并提供可以直接复制给 AI 的交互指令。
+它完整说明从项目初始化、AI Skill Interview、GitHub 与 contributor identity、`dev/prod`、需求评审、任务卡、施工、Review、版本、CI/CD、日报、日报查收到项目基线恢复的整个协作流程，并提供可以直接复制给 AI 的交互指令。
 
 ## First Review
 
-一个新项目进入实质性施工前，优先评审这四项：
+一个新项目进入实质性施工前，优先评审这些入口：
 
 1. `AGENTS.md`：AI 施工与 Review 边界
 2. `VERSION` + `CHANGELOG.md` + `docs/governance/version-control.md`：版本控制
-3. `docs/workbench/00-work-ledger.md` + `docs/workbench/tasks/README.md`：默认台账与任务卡规则
-4. `docs/ai/skills.md`：通过 AI 交互式问答确认本项目的技能、工具、GitHub 仓库与权限
+3. `docs/governance/contributors.md`：作者 / contributor / GitHub identity
+4. `docs/workbench/00-work-ledger.md` + `docs/workbench/tasks/README.md`：默认台账与任务卡规则
+5. `docs/ai/skills.md`：通过 AI 交互式问答确认本项目的技能、工具、GitHub 仓库、contributors 与权限
 
 其中 AI Skills 默认状态为 `PENDING`。不要让模板替用户决定 AI 的角色和权限；AI 应在首次实质性施工前通过自然问答完成确认，再将 Skill Profile 更新为 `CONFIRMED`。
 
@@ -36,8 +39,10 @@ Current Seed Version: **0.3.1**
 - Git 内产品文档、工作台账、任务卡协议
 - `AGENTS.md` AI 协作 / Review 边界
 - SemVer + VERSION + CHANGELOG 版本基线
+- Contributor Identity：真实 GitHub login 归属与未验证身份降级规则
 - AI Skill Interview + Project Skill Profile
-- `daily-report`：根据当天 commit + 台账 / 任务卡生成证据型项目日报
+- `daily-report`：根据当天 GitHub commit + 台账 / 任务卡生成证据型项目日报
+- `daily-report-review`：回查日报与 GitHub / 台账 / CI 后给出查收结论
 - 完整 AI 协作说明书
 - CI：install / version contract / typecheck / build / CLI smoke test
 - CD：`dev` Cloudflare preview，`prod` Cloudflare production + GitHub Pages
@@ -51,7 +56,7 @@ npm install -g github:dangjingtao/com-design-prototype
 mira create prototype
 ```
 
-CLI 会询问项目名、产品名、端侧和部署方式。
+CLI 会询问项目名、产品名、端侧和部署方式。生成后 AI 初始化还会确认 project name/title、GitHub repository、human contributors 的 GitHub identity 以及 AI Skills。
 
 也可以直接参数化，适合 AI / shell：
 
@@ -82,9 +87,13 @@ mira create prototype
         ↓
 AI 按 AGENTS.md 开始初始化问答
         ↓
+确认 project name / title
+        ↓
 如果已有 GitHub 仓库，直接在对话里粘贴 repository URL
         ↓
-AI 记录到 prototype.config.json.repository.url
+确认 human contributors 的 GitHub login / profile
+        ↓
+AI 写入 repository + contributor identity
         ↓
 dev：日常施工 / Preview
         ↓
@@ -92,6 +101,29 @@ prod：验收 / Production
 ```
 
 不要求在创建 Prototype 前先建 GitHub 仓库。
+
+## Contributor Identity
+
+规则见：
+
+```text
+docs/governance/contributors.md
+```
+
+默认：
+
+```text
+Tomz <dangjingtao@gmail.com>
+→ human owner
+→ GitHub @dangjingtao
+→ verified
+
+Mira <mira@tomz.io>
+→ AI collaborator
+→ GitHub account: none
+```
+
+日报和 Review 优先使用 GitHub API / Connector 返回的真实 `author.login` 与 contributors 配置匹配。只有 Git name/email 而没有 GitHub login 时，必须标记为 `unverified Git identity`。
 
 ## Git 分支合同
 
@@ -118,50 +150,67 @@ prod → 验收基线、正式发布
 
 AI 会逐步确认：
 
+- project name / title 是否正确
 - GitHub repository；已有仓库时直接贴 URL 即可，没有也不阻塞初始化
+- human contributors 与 GitHub login / profile
 - 它在项目里承担什么角色
 - 允许使用哪些工具 / Connector
 - 是否允许直接改代码、台账、commit、PR、部署
 - 是否启用 `daily-report`
+- 是否启用 `daily-report-review`
 - 日报是否只生成 Markdown，还是允许自动 commit / push
+- 查收结果只返回对话，还是允许写回原日报
 - 当前最重要的验证目标
 - 明确禁止越界的事项
 - 是否需要其他项目专属 Skill
 
 最终结果落在 `docs/ai/skills.md`，而不是只存在聊天记录里。
 
-## Daily Report Skill
+## Daily Report
 
-规则见：
+生成规则：
 
 ```text
 docs/ai/skills/daily-report.md
 ```
 
-用户要求生成日报时，AI 会根据：
+用户说：
 
-- 当天 `dev` commit
-- 当天如有发布的 `prod` commit
-- `docs/workbench/00-work-ledger.md`
-- 当天涉及的任务卡
-- PR / CI / Review 等可验证证据
+```text
+生成今天的项目日报。
+```
 
-进行 commit ↔ task card 对账，然后生成：
+AI 会根据当天 `dev` / `prod` 的 GitHub commit、contributors、台账、任务卡、PR / CI / Review 等证据进行 commit ↔ task card ↔ contributor 对账，然后生成：
 
 ```text
 docs/reports/daily/YYYY-MM-DD.md
 ```
 
-日报会明确标记：
+日报会明确标记真实 contributor、未归档 commit、状态待核验、台账偏差、身份待核验和验证 / 发布结果。
 
-- 实际完成改动
-- 未归档 commit
-- 任务卡状态待核验
-- 台账与代码偏差
-- 验证 / 发布结果
-- 当前真实阻塞与下一步
+## Daily Report Review
 
-它不会把“讨论过”写成“做完了”，也不会因为任务卡写了完成就自动视为完成。
+查收规则：
+
+```text
+docs/ai/skills/daily-report-review.md
+```
+
+用户说：
+
+```text
+查收今天日报。
+```
+
+AI 会独立回查 GitHub、任务卡、台账和 CI，只给三种结论：
+
+```text
+ACCEPTED
+ACCEPTED_WITH_NOTES
+NEEDS_CORRECTION
+```
+
+默认在对话中给负责人一份简洁查收摘要。没有授权时不静默修改日报；需要落档时优先追加到同一天原日报，不建立第二套日报文件。
 
 ## CI/CD
 
@@ -257,7 +306,11 @@ packages/
 docs/
   ai/
     skills/
+      daily-report.md
+      daily-report-review.md
   governance/
+    contributors.md
+    version-control.md
   guide/
     ai-collaboration-manual.md
   product/
@@ -282,3 +335,4 @@ prototype.config.json
 6. 部署配置可以入库，凭据永远不入库。
 7. AI 的技能和权限必须经过用户确认，不由 Seed 静默扩权。
 8. 日报只总结真实证据，不制造“看起来很忙”的内容。
+9. GitHub identity 只认实际可验证账号，不根据 Git name/email 猜测。
