@@ -2,6 +2,20 @@
 
 All notable changes to Com Design Prototype are recorded here.
 
+## [0.3.0] - 2026-08-27
+
+### Added
+
+- Project repository metadata with GitHub URL confirmed during AI initialization
+- Built-in Daily Report Skill based on same-day commits, ledger and task-card evidence
+- Daily report output contract under `docs/reports/daily/YYYY-MM-DD.md`
+
+### Changed
+
+- Generated product projects use only `dev` and `prod` as long-lived branches
+- `main` is explicitly excluded from generated project work and release flow
+- AI Skill Interview now confirms GitHub repository URL and Daily Report Skill usage
+
 ## [0.2.0] - 2026-08-27
 
 ### Added
