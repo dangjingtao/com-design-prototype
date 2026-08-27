@@ -6,7 +6,7 @@
 
 Authors: **Tomz <dangjingtao@gmail.com> & Mira <mira@tomz.io>**
 
-Current Seed Version: **0.2.0**
+Current Seed Version: **0.3.0**
 
 ## First Review
 
@@ -15,7 +15,7 @@ Current Seed Version: **0.2.0**
 1. `AGENTS.md`：AI 施工与 Review 边界
 2. `VERSION` + `CHANGELOG.md` + `docs/governance/version-control.md`：版本控制
 3. `docs/workbench/00-work-ledger.md` + `docs/workbench/tasks/README.md`：默认台账与任务卡规则
-4. `docs/ai/skills.md`：通过 AI 交互式问答确认本项目的技能、工具和权限
+4. `docs/ai/skills.md`：通过 AI 交互式问答确认本项目的技能、工具、GitHub 仓库与权限
 
 其中 AI Skills 默认状态为 `PENDING`。不要让模板替用户决定 AI 的角色和权限；AI 应在首次实质性施工前通过自然问答完成确认，再将 Skill Profile 更新为 `CONFIRMED`。
 
@@ -29,6 +29,7 @@ Current Seed Version: **0.2.0**
 - `AGENTS.md` AI 协作 / Review 边界
 - SemVer + VERSION + CHANGELOG 版本基线
 - AI Skill Interview + Project Skill Profile
+- `daily-report`：根据当天 commit + 台账 / 任务卡生成证据型项目日报
 - CI：install / version contract / typecheck / build / CLI smoke test
 - CD：`dev` Cloudflare preview，`prod` Cloudflare production + GitHub Pages
 - `mira create prototype` 项目生成器
@@ -65,6 +66,39 @@ mira create prototype demo-mobile \
 
 生成出的业务项目使用自己的版本线，默认从 `0.1.0` 开始；Seed 版本会记录在 `prototype.config.json.versioning.seedVersion`，不会混用。
 
+## 推荐初始化顺序
+
+```text
+mira create prototype
+        ↓
+AI 按 AGENTS.md 开始初始化问答
+        ↓
+如果已有 GitHub 仓库，直接在对话里粘贴 repository URL
+        ↓
+AI 记录到 prototype.config.json.repository.url
+        ↓
+dev：日常施工 / Preview
+        ↓
+prod：验收 / Production
+```
+
+不要求在创建 Prototype 前先建 GitHub 仓库。
+
+## Git 分支合同
+
+生成后的业务项目只有两条长期分支：
+
+```text
+dev  → 日常工作、集成、CI、Preview
+prod → 验收基线、正式发布
+```
+
+**业务项目不使用 `main` 参与开发、集成或发布。**
+
+短生命周期 `task/*` / `fix/*` 分支允许存在，但最终合回 `dev`。
+
+如果 GitHub 新仓库因为平台默认行为存在一个空 `main`，它不进入 Prototype 工作流；是否删除由用户决定。
+
 ## AI Skill Interview
 
 生成项目后第一次让 AI 实质施工时，可以直接说：
@@ -75,18 +109,54 @@ mira create prototype demo-mobile \
 
 AI 会逐步确认：
 
+- GitHub repository；已有仓库时直接贴 URL 即可，没有也不阻塞初始化
 - 它在项目里承担什么角色
 - 允许使用哪些工具 / Connector
 - 是否允许直接改代码、台账、commit、PR、部署
+- 是否启用 `daily-report`
+- 日报是否只生成 Markdown，还是允许自动 commit / push
 - 当前最重要的验证目标
 - 明确禁止越界的事项
-- 是否需要项目专属 Skill
+- 是否需要其他项目专属 Skill
 
 最终结果落在 `docs/ai/skills.md`，而不是只存在聊天记录里。
 
+## Daily Report Skill
+
+规则见：
+
+```text
+docs/ai/skills/daily-report.md
+```
+
+用户要求生成日报时，AI 会根据：
+
+- 当天 `dev` commit
+- 当天如有发布的 `prod` commit
+- `docs/workbench/00-work-ledger.md`
+- 当天涉及的任务卡
+- PR / CI / Review 等可验证证据
+
+进行 commit ↔ task card 对账，然后生成：
+
+```text
+docs/reports/daily/YYYY-MM-DD.md
+```
+
+日报会明确标记：
+
+- 实际完成改动
+- 未归档 commit
+- 任务卡状态待核验
+- 台账与代码偏差
+- 验证 / 发布结果
+- 当前真实阻塞与下一步
+
+它不会把“讨论过”写成“做完了”，也不会因为任务卡写了完成就自动视为完成。
+
 ## CI/CD
 
-生成项目后先推到 GitHub。项目默认从 `dev` 分支开始。
+生成项目接入 GitHub 后，项目默认从 `dev` 分支开始。
 
 如果启用了 Cloudflare：
 
@@ -115,7 +185,7 @@ Cloudflare 凭据只从当前 shell 读取，不写入仓库文件。
 
 | Git 动作 | CI/CD |
 | --- | --- |
-| Pull Request | version contract + typecheck + build + CLI smoke |
+| Pull Request → `dev` | version contract + typecheck + build |
 | push `dev` | CI + Cloudflare preview |
 | push `prod` | CI + Cloudflare production + GitHub Pages production |
 
@@ -177,8 +247,11 @@ packages/
   shared/
 docs/
   ai/
+    skills/
   governance/
   product/
+  reports/
+    daily/
   workbench/
 cli/
 .github/workflows/
@@ -197,3 +270,4 @@ prototype.config.json
 5. 所有关键状态都应能在 Prototype Runtime 中被人工触发。
 6. 部署配置可以入库，凭据永远不入库。
 7. AI 的技能和权限必须经过用户确认，不由 Seed 静默扩权。
+8. 日报只总结真实证据，不制造“看起来很忙”的内容。
