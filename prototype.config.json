@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "project": {
     "name": "com-design-prototype",
     "title": "Com Design Prototype"
@@ -11,6 +11,13 @@
   "design": {
     "preset": "com-design",
     "icons": "lucide"
+  },
+  "versioning": {
+    "strategy": "semver",
+    "currentVersion": "0.2.0",
+    "initialProjectVersion": "0.1.0",
+    "versionFile": "VERSION",
+    "changelogFile": "CHANGELOG.md"
   },
   "deployment": {
     "githubPages": {
