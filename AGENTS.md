@@ -14,13 +14,14 @@
 2. `VERSION`
 3. `docs/product/00-product-brief.md`
 4. `docs/workbench/00-work-ledger.md`
-5. `docs/ai/skills.md`
-6. 当前任务卡（如存在）
-7. `docs/guide/ai-collaboration-manual.md`
+5. `docs/governance/contributors.md`
+6. `docs/ai/skills.md`
+7. 当前任务卡（如存在）
+8. `docs/guide/ai-collaboration-manual.md`
 
 不要只看页面代码自行推导产品模型。
 
-如果 `docs/ai/skills.md` 状态为 `PENDING`，在首次实质性施工前执行“AI Skill Interview”，通过与用户的交互式问答确认本项目需要的 AI 技能，再把结果写回该文件。不要擅自替用户预设技能组合。
+如果 `docs/ai/skills.md` 状态为 `PENDING`，在首次实质性施工前执行“AI Skill Interview”，通过与用户的交互式问答确认本项目需要的 AI 技能、项目身份、GitHub 仓库和 contributors，再把结果写回该文件。不要擅自替用户预设技能组合或 GitHub 身份。
 
 ## 工作原则
 
@@ -34,6 +35,7 @@
 8. **验证结果不得伪造**：无法真实 typecheck / build / browser verify 时明确说明。
 9. **CI 通过不等于产品验收通过**：构建、类型检查、自动测试只能作为证据，不能单独把任务标记为 `PASS`。
 10. **最小必要改动**：原型阶段不主动引入生产级后端、复杂状态框架、鉴权体系或与当前验证目标无关的基础设施。
+11. **身份不得猜测**：Git name/email 不等于 GitHub account；只有可验证的 GitHub login 才能作为账号归属。
 
 ## Design System
 
@@ -56,9 +58,12 @@
 
 开发阶段允许用 URL query `?view=` 或 PrototypePanel 切换状态。
 
-## Git / Repository / 版本控制
+## Git / Repository / Contributors / 版本控制
 
-详细规则见 `docs/governance/version-control.md`。
+详细规则见：
+
+- `docs/governance/version-control.md`
+- `docs/governance/contributors.md`
 
 ### 业务项目长期分支
 
@@ -83,6 +88,16 @@
 2. 写入 `prototype.config.json.repository.url`。
 3. 只有用户已授权 Git 写操作时，才设置或更新 `origin`。
 4. 不因为 GitHub 默认分支习惯而额外引入 `main` 产品工作流。
+
+### Contributor identity
+
+`prototype.config.json.contributors` 是项目身份合同。
+
+- human contributor 的 GitHub 归属优先使用实际 GitHub API / Connector 返回的 login 验证。
+- 只有与 `contributors[].github.login` 匹配且 verified 的账号，才写成 `Name (@login)`。
+- 只能拿到 Git name/email 时，标记 `unverified Git identity`。
+- bot / automation 不得归给 human contributor。
+- Mira 当前是 AI collaborator，没有 GitHub account；不得伪造 Mira GitHub identity。
 
 ### 版本规则
 
@@ -113,12 +128,26 @@
 当用户要求“日报 / 今日项目总结 / 今日实际改动”时：
 
 1. 读取当天 `dev` commit；如 `prod` 当天有发布，也读取 `prod`。
-2. 读取总台账与当天涉及的任务卡。
-3. 对账 commit ↔ task card，不把任务卡文字本身当完成证据。
-4. 把没有任务卡归属的 commit 标为“未归档改动”。
-5. 把任务卡声称完成但缺乏证据的项目标为“状态待核验”。
-6. 输出或更新 `docs/reports/daily/YYYY-MM-DD.md`。
-7. 未明确授权时，只生成日报，不自动改 PASS、不升级版本、不部署、不 commit / push。
+2. 读取 repository、contributors、总台账与当天涉及的任务卡。
+3. 对账 commit ↔ task card ↔ contributor，不把任务卡文字本身当完成证据。
+4. 优先用实际 GitHub login 归属改动；无法验证时标记 `unverified Git identity`。
+5. 把没有任务卡归属的 commit 标为“未归档改动”。
+6. 把任务卡声称完成但缺乏证据的项目标为“状态待核验”。
+7. 输出或更新 `docs/reports/daily/YYYY-MM-DD.md`。
+8. 未明确授权时，只生成日报，不自动改 PASS、不升级版本、不部署、不 commit / push。
+
+## Daily Report Review Skill
+
+规则见 `docs/ai/skills/daily-report-review.md`。
+
+当用户要求“查收日报 / 审日报 / 看日报有没有漏”时：
+
+1. 读取当天日报。
+2. 回查实际 GitHub commits / PR / CI、contributors、台账和任务卡。
+3. 检查完整性、真实性、台账一致性、Contributor 归属和发布状态。
+4. 只给出 `ACCEPTED` / `ACCEPTED_WITH_NOTES` / `NEEDS_CORRECTION` 三种结论。
+5. 默认在对话里给负责人查收摘要；没有明确授权时不静默修改原日报。
+6. 需要落档时，优先把 Review 结果追加到同一天原日报，不创建第二套日报文件。
 
 ## AI Skill Interview
 
@@ -126,14 +155,17 @@
 
 1. 先告诉用户需要为当前项目确认 AI 协作技能。
 2. 采用自然的交互式问答，不一次丢出长表单；每轮优先确认 1–2 个关键问题。
-3. 如果使用 GitHub，允许用户直接粘贴 repository URL；没有仓库也不阻塞初始化。
-4. 至少确认：
+3. 首先确认 project name / title 是否正确。
+4. 如果使用 GitHub，允许用户直接粘贴 repository URL；没有仓库也不阻塞初始化。
+5. 确认 human contributors 与其 GitHub login/profile；实际校验后才能标记 verified。
+6. 至少确认：
    - AI 在本项目承担哪些角色（产品 / UI / 前端 / 测试 / Review / 文档 / 发布等）
    - 允许使用哪些工具与外部连接（GitHub、浏览器、设计工具、部署平台等）
    - 是否允许 AI 直接改代码、提交、开 PR、更新台账、部署
-   - 是否启用 `daily-report`，以及日报是否允许自动 commit / push
+   - 是否启用 `daily-report` 和 `daily-report-review`
+   - 日报是否允许自动 commit / push，查收结果是否允许写回日报
    - 当前产品最重要的验证目标与禁止越界事项
    - 是否需要其他项目专属技能或领域知识
-5. 根据答案给出建议技能清单，明确区分“用户已确认”和“AI 建议”。
-6. 用户确认后把 `docs/ai/skills.md` 改为 `CONFIRMED`，记录日期、适用范围、技能、权限和限制。
-7. 后续需求明显改变协作边界时，把状态改为 `REVIEW_REQUIRED`，重新通过问答确认，不静默扩权。
+7. 根据答案给出建议技能清单，明确区分“用户已确认”和“AI 建议”。
+8. 用户确认后把 `docs/ai/skills.md` 改为 `CONFIRMED`，记录日期、适用范围、项目身份、contributors、技能、权限和限制。
+9. 后续需求明显改变协作边界时，把状态改为 `REVIEW_REQUIRED`，重新通过问答确认，不静默扩权。
