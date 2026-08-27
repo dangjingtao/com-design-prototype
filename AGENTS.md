@@ -16,6 +16,7 @@
 4. `docs/workbench/00-work-ledger.md`
 5. `docs/ai/skills.md`
 6. 当前任务卡（如存在）
+7. `docs/guide/ai-collaboration-manual.md`
 
 不要只看页面代码自行推导产品模型。
 
