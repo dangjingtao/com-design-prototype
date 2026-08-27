@@ -2,6 +2,20 @@
 
 All notable changes to Com Design Prototype are recorded here.
 
+## [0.3.1] - 2026-08-27
+
+### Added
+
+- Complete AI collaboration manual at `docs/guide/ai-collaboration-manual.md`
+- End-to-end guidance from project initialization through Skill Interview, task flow, review, daily report, CI/CD and recovery
+- Reusable user ↔ AI interaction prompts for common project operations
+
+### Changed
+
+- `AGENTS.md` now requires the collaboration manual during onboarding
+- README exposes the manual as the primary usage guide
+- Seed smoke test now verifies generated projects include the manual
+
 ## [0.3.0] - 2026-08-27
 
 ### Added
