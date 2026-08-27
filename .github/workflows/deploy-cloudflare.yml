@@ -10,20 +10,37 @@ jobs:
     strategy:
       matrix:
         app: [mobile, pc]
-    if: ${{ hashFiles(format('apps/{0}/package.json', matrix.app)) != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
+      - name: Detect target
+        id: target
+        shell: bash
+        run: |
+          if [ -d "apps/${{ matrix.app }}" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/setup-node@v4
+        if: steps.target.outputs.exists == 'true'
         with:
           node-version: 22
           cache: npm
+
       - run: npm install
+        if: steps.target.outputs.exists == 'true'
+
       - name: Build
+        if: steps.target.outputs.exists == 'true'
         run: npm run build --workspace @prototype/${{ matrix.app }}
+
       - name: Deploy
-        uses: cloudflare/wrangler-action@v3
+        if: steps.target.outputs.exists == 'true'
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
