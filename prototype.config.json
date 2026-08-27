@@ -1,8 +1,12 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "project": {
     "name": "com-design-prototype",
     "title": "Com Design Prototype"
+  },
+  "repository": {
+    "provider": "github",
+    "url": null
   },
   "targets": {
     "mobile": true,
@@ -14,7 +18,7 @@
   },
   "versioning": {
     "strategy": "semver",
-    "currentVersion": "0.2.0",
+    "currentVersion": "0.3.0",
     "initialProjectVersion": "0.1.0",
     "versionFile": "VERSION",
     "changelogFile": "CHANGELOG.md"
@@ -35,11 +39,17 @@
   "workflow": {
     "developmentBranch": "dev",
     "productionBranch": "prod",
+    "longLivedBranches": ["dev", "prod"],
+    "usesMainForProductWork": false,
     "previewEnvironment": "preview",
     "productionEnvironment": "production"
   },
   "workbench": {
     "enabled": true,
-    "taskPrefix": "T"
+    "taskPrefix": "T",
+    "dailyReport": {
+      "skill": "docs/ai/skills/daily-report.md",
+      "outputDirectory": "docs/reports/daily"
+    }
   }
 }
