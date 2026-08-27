@@ -42,8 +42,10 @@ jobs:
           test -f mira-smoke/docs/ai/skills/daily-report.md
           test -f mira-smoke/docs/reports/daily/README.md
           test -f mira-smoke/docs/governance/version-control.md
+          test -f mira-smoke/docs/guide/ai-collaboration-manual.md
           test "$(tr -d '\r\n' < mira-smoke/VERSION)" = "0.1.0"
           grep -q 'Status: `PENDING`' mira-smoke/docs/ai/skills.md
+          grep -q 'ai-collaboration-manual.md' mira-smoke/AGENTS.md
           grep -q 'branches: \[dev, prod\]' mira-smoke/.github/workflows/verify.yml
           ! grep -q 'branches: \[main' mira-smoke/.github/workflows/verify.yml
           ! grep -q 'cli/mira.mjs' mira-smoke/.github/workflows/verify.yml
@@ -53,7 +55,7 @@ jobs:
           if (p.version !== '0.1.0') process.exit(1);
           if (!p.author.includes('Tomz') || !p.author.includes('Mira')) process.exit(1);
           if (c.versioning.currentVersion !== '0.1.0') process.exit(1);
-          if (c.versioning.seedVersion !== '0.3.0') process.exit(1);
+          if (c.versioning.seedVersion !== '0.3.1') process.exit(1);
           if (!c.targets.mobile || c.targets.pc) process.exit(1);
           if (!c.deployment.githubPages.enabled) process.exit(1);
           if (c.deployment.cloudflare.enabled) process.exit(1);
