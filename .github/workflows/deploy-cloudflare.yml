@@ -1,0 +1,30 @@
+name: Deploy Cloudflare Pages
+
+on:
+  push:
+    branches: [dev, prod]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    strategy:
+      matrix:
+        app: [mobile, pc]
+    if: ${{ hashFiles(format('apps/{0}/package.json', matrix.app)) != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - name: Build
+        run: npm run build --workspace @prototype/${{ matrix.app }}
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy apps/${{ matrix.app }}/dist --project-name=${{ github.event.repository.name }}-${{ matrix.app }} --branch=${{ github.ref_name }}

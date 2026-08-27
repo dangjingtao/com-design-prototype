@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "com-design-prototype",
+    "title": "Com Design Prototype"
+  },
+  "targets": {
+    "mobile": true,
+    "pc": true
+  },
+  "design": {
+    "preset": "com-design",
+    "icons": "lucide"
+  },
+  "deployment": {
+    "githubPages": true,
+    "cloudflare": true
+  },
+  "workflow": {
+    "developmentBranch": "dev",
+    "productionBranch": "prod"
+  },
+  "workbench": {
+    "enabled": true,
+    "taskPrefix": "T"
+  }
+}

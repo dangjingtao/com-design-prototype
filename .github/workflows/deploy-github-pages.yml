@@ -1,0 +1,55 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - name: Build pages artifact
+        shell: bash
+        run: |
+          mkdir -p pages
+          if [ -d apps/mobile ]; then
+            VITE_BASE_PATH="/${{ github.event.repository.name }}/mobile/" npm run build:mobile
+            cp -R apps/mobile/dist pages/mobile
+          fi
+          if [ -d apps/pc ]; then
+            VITE_BASE_PATH="/${{ github.event.repository.name }}/pc/" npm run build:pc
+            cp -R apps/pc/dist pages/pc
+          fi
+          cat > pages/index.html <<EOF
+          <!doctype html><meta charset="utf-8"><title>Prototype</title><h1>Prototype</h1><p><a href="./mobile/">Mobile</a></p><p><a href="./pc/">PC</a></p>
+          EOF
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
