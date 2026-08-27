@@ -14,7 +14,19 @@ Status: `PENDING`
 
 AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前项目最关键的 1–2 个问题开始。
 
-至少需要确认以下内容：
+### 0. 项目仓库
+
+如果项目使用 GitHub，询问用户是否已有仓库。
+
+- 已有：允许用户直接在对话中粘贴 GitHub repository URL。
+- 尚无：保留 `prototype.config.json.repository.url = null`，不要强迫用户先创建仓库。
+
+拿到 URL 后：
+
+1. 校验它确实指向预期 GitHub repository。
+2. 写入 `prototype.config.json.repository.url`。
+3. 只有在用户允许修改 Git 配置时，才设置 / 更新 `origin`。
+4. 业务项目长期分支只使用 `dev` / `prod`，不建立 `main` 工作流。
 
 ### 1. AI 角色
 
@@ -82,7 +94,11 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 
 ### 6. 项目专属技能
 
-如果需要，可在这里约定项目特定 Skill。建议使用稳定名称和明确职责，例如：
+Seed 内置可供确认的 Skill：
+
+- `daily-report`：根据当天 commit + 台账 / 任务卡实际情况生成项目日报，规则见 `docs/ai/skills/daily-report.md`。
+
+也可以根据项目需要增加其他稳定名称，例如：
 
 - `product-review`
 - `mobile-prototype`
@@ -91,7 +107,14 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 - `regression-check`
 - `release-guard`
 
-这些名字只是建议，不代表默认启用。
+除了 Seed 已提供的能力外，其余名字只是建议，不代表默认启用。
+
+对于 `daily-report`，至少确认：
+
+- 是否启用
+- 日报面向谁阅读
+- 是否允许 AI 仅生成 Markdown，还是也允许自动 commit / push
+- 如本地日期 / 工作时区不明确，使用哪个时区作为“当天”边界
 
 ---
 
@@ -103,6 +126,7 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 - Confirmed at: -
 - Confirmed by: -
 - Project goal: -
+- GitHub repository: -
 
 ### Confirmed skills
 
@@ -135,6 +159,7 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 - 产品阶段明显变化
 - AI 获得新的写入 / 发布权限
 - 新接入外部工具或账号
+- GitHub repository / 分支策略发生变化
 - 从 prototype 进入 production engineering
 - 用户明确要求重做技能配置
 
