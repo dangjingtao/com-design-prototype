@@ -2,9 +2,9 @@
 
 ## 目的
 
-根据项目当天真实发生的 Git 提交、工作台账、任务卡和可验证结果，生成一份可追溯的项目日报。
+根据项目当天真实发生的 GitHub / Git 提交、工作台账、任务卡和可验证结果，生成一份可追溯的项目日报。
 
-日报不是聊天摘要，也不是根据记忆补写。它必须回答：**今天这个项目实际改了什么，哪些任务推进了，证据是什么，还有什么没有闭环。**
+日报不是聊天摘要，也不是根据记忆补写。它必须回答：**今天这个项目实际改了什么，哪些任务推进了，谁在 GitHub 上产生了这些改动，证据是什么，还有什么没有闭环。**
 
 ## 启用方式
 
@@ -12,17 +12,36 @@
 
 用户说“生成日报 / 写今天日报 / 整理今日项目改动”等等，即可执行。
 
+日报查收和复核由独立 Skill `docs/ai/skills/daily-report-review.md` 负责。
+
 ## 数据范围
 
 默认读取当前项目在“当天本地时间”内的以下信息：
 
 1. `dev` 分支当天 commit；如当天 `prod` 有发布或合并，也读取 `prod`。
-2. `docs/workbench/00-work-ledger.md`。
-3. 当天涉及或状态发生变化的 `docs/workbench/tasks/T*.md`。
-4. 与上述任务相关、当前可访问的 PR / CI / 页面验证证据。
-5. 工作区未提交变化可以作为 `WIP / 未提交` 提示，但不得算作已完成成果。
+2. `prototype.config.json` 中 repository 与 contributors 身份配置。
+3. `docs/governance/contributors.md`。
+4. `docs/workbench/00-work-ledger.md`。
+5. 当天涉及或状态发生变化的 `docs/workbench/tasks/T*.md`。
+6. 与上述任务相关、当前可访问的 PR / CI / 页面验证证据。
+7. 工作区未提交变化可以作为 `WIP / 未提交` 提示，但不得算作已完成成果。
 
-如果 GitHub repository URL 已记录在 `prototype.config.json.repository.url`，优先用它校验远端 commit / PR 信息；没有 URL 时使用当前 Git remote / 本地 Git 历史。
+如果 GitHub repository URL 已记录在 `prototype.config.json.repository.url`，优先用实际 GitHub repository 校验远端 commit / PR / CI 信息；没有 URL 时使用当前 Git remote / 本地 Git 历史。
+
+## Contributor 身份归属
+
+日报不能只读取 commit message 或 Git author 字符串后就断言“谁做了”。
+
+按以下优先级识别 contributor：
+
+1. 优先读取 GitHub API / Connector 返回的 commit `author.login`、PR author 等平台身份。
+2. 对照 `prototype.config.json.contributors[].github.login`。
+3. verified login 匹配后，可以显示为 `Name (@login)`。
+4. 如果 GitHub 未关联账号，只能退回 Git commit author name/email，并标记 `unverified Git identity`。
+5. bot / automation 不得归给 human contributor。
+6. Mira 没有真实 GitHub Bot / App 账号时，不得把 GitHub commit 归为 Mira。
+
+Contributor 信息用于可追溯归属，不用于按 commit 数、行数或工作量评价人员。
 
 ## 证据优先级
 
@@ -38,15 +57,15 @@
 
 ## 对账规则
 
-生成日报前必须做一次 commit ↔ task ledger 对账：
+生成日报前必须做一次 commit ↔ task ledger ↔ contributor 对账。
 
 ### 有 commit，有任务卡
 
-把实际 diff / commit 内容与任务卡目标对齐后总结，不照抄 commit message。
+把实际 diff / commit 内容与任务卡目标对齐后总结，不照抄 commit message；能验证 GitHub login 时记录 contributor。
 
 ### 有 commit，没有任务卡
 
-日报中列为 `未归档改动`，说明 commit，并建议是否回补任务卡 / 台账。
+日报中列为 `未归档改动`，说明 commit、实际变化和 contributor，并建议是否回补任务卡 / 台账。
 
 ### 任务卡标记完成，但没有可验证证据
 
@@ -59,6 +78,10 @@
 ### commit 与任务卡描述不一致
 
 优先报告实际代码 / 文档变化，并把差异列入 `台账偏差`。
+
+### contributor 无法验证
+
+不要猜 GitHub 用户；写为 `unverified Git identity`，并在需要时建议补 contributor identity。
 
 ## 输出位置
 
@@ -81,13 +104,14 @@ docs/reports/daily/YYYY-MM-DD.md
 
 ### Txxx · 任务标题
 - 实际变化：
+- Contributor: Tomz (@dangjingtao) / unverified Git identity
 - 影响范围：Mobile / PC / Shared / Docs / CI/CD
 - 状态：DOING / REVIEW / PASS / ...
 - 证据：commit / PR / CI / review
 
 ## 未归档改动
 
-- commit xxxx：...
+- commit xxxx · Contributor: ... · ...
 
 ## 验证与发布
 
@@ -96,6 +120,11 @@ docs/reports/daily/YYYY-MM-DD.md
 ## 台账偏差
 
 - 任务卡与实际 commit 不一致的地方。
+- 没有则写“无”。
+
+## 身份待核验
+
+- 无法映射到 verified GitHub contributor 的提交。
 - 没有则写“无”。
 
 ## 阻塞与风险
@@ -110,7 +139,7 @@ docs/reports/daily/YYYY-MM-DD.md
 ## 写作要求
 
 - 简洁、事实优先，适合直接给项目负责人或管理者阅读。
-- 每个关键结论尽量带 `Txxx` 或短 commit SHA。
+- 每个关键结论尽量带 `Txxx`、短 commit SHA 和可验证 contributor。
 - 不把“讨论过 / 想过 / AI 建议过”写成“已实现”。
 - 不根据 commit 数量评价工作量或人员表现。
 - 不为了让日报显得充实而扩写无实际变化的内容。
@@ -127,3 +156,4 @@ Daily Report Skill 默认只读取与整理事实，并写入 `docs/reports/dail
 - 不修改 VERSION
 - 不触发部署
 - 不自动 commit / push
+- 不静默修改 contributor identity
