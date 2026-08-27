@@ -6,7 +6,15 @@
 
 Authors: **Tomz <dangjingtao@gmail.com> & Mira <mira@tomz.io>**
 
-Current Seed Version: **0.3.0**
+Current Seed Version: **0.3.1**
+
+## 完整说明书
+
+第一次使用，优先阅读：
+
+**[`docs/guide/ai-collaboration-manual.md`](docs/guide/ai-collaboration-manual.md)**
+
+它完整说明从项目初始化、AI Skill Interview、GitHub 接入、`dev/prod`、需求评审、任务卡、施工、Review、版本、CI/CD、日报到项目基线恢复的整个协作流程，并提供可以直接复制给 AI 的交互指令。
 
 ## First Review
 
@@ -30,6 +38,7 @@ Current Seed Version: **0.3.0**
 - SemVer + VERSION + CHANGELOG 版本基线
 - AI Skill Interview + Project Skill Profile
 - `daily-report`：根据当天 commit + 台账 / 任务卡生成证据型项目日报
+- 完整 AI 协作说明书
 - CI：install / version contract / typecheck / build / CLI smoke test
 - CD：`dev` Cloudflare preview，`prod` Cloudflare production + GitHub Pages
 - `mira create prototype` 项目生成器
@@ -249,6 +258,8 @@ docs/
   ai/
     skills/
   governance/
+  guide/
+    ai-collaboration-manual.md
   product/
   reports/
     daily/
