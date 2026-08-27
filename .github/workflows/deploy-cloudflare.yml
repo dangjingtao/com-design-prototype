@@ -5,6 +5,10 @@ on:
     branches: [dev, prod]
   workflow_dispatch:
 
+env:
+  CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
 jobs:
   deploy:
     strategy:
@@ -14,9 +18,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
 
       - name: Detect target
         id: target
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
         shell: bash
         run: |
           if [ -d "apps/${{ matrix.app }}" ]; then
@@ -26,19 +32,19 @@ jobs:
           fi
 
       - uses: actions/setup-node@v6
-        if: steps.target.outputs.exists == 'true'
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != '' && steps.target.outputs.exists == 'true'
         with:
           node-version: 24
 
       - run: npm install
-        if: steps.target.outputs.exists == 'true'
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != '' && steps.target.outputs.exists == 'true'
 
       - name: Build
-        if: steps.target.outputs.exists == 'true'
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != '' && steps.target.outputs.exists == 'true'
         run: npm run build --workspace @prototype/${{ matrix.app }}
 
       - name: Deploy
-        if: steps.target.outputs.exists == 'true'
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != '' && steps.target.outputs.exists == 'true'
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
