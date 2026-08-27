@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "project": {
     "name": "com-design-prototype",
     "title": "Com Design Prototype"
@@ -8,6 +8,26 @@
     "provider": "github",
     "url": null
   },
+  "contributors": [
+    {
+      "name": "Tomz",
+      "email": "dangjingtao@gmail.com",
+      "type": "human",
+      "role": "owner",
+      "github": {
+        "login": "dangjingtao",
+        "profile": "https://github.com/dangjingtao",
+        "verified": true
+      }
+    },
+    {
+      "name": "Mira",
+      "email": "mira@tomz.io",
+      "type": "ai-collaborator",
+      "role": "co-author",
+      "github": null
+    }
+  ],
   "targets": {
     "mobile": true,
     "pc": true
@@ -18,7 +38,7 @@
   },
   "versioning": {
     "strategy": "semver",
-    "currentVersion": "0.3.1",
+    "currentVersion": "0.4.0",
     "initialProjectVersion": "0.1.0",
     "versionFile": "VERSION",
     "changelogFile": "CHANGELOG.md"
@@ -49,6 +69,7 @@
     "taskPrefix": "T",
     "dailyReport": {
       "skill": "docs/ai/skills/daily-report.md",
+      "reviewSkill": "docs/ai/skills/daily-report-review.md",
       "outputDirectory": "docs/reports/daily"
     }
   }
