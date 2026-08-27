@@ -39,9 +39,13 @@ jobs:
           test ! -f mira-smoke/.github/workflows/deploy-cloudflare.yml
           test -f mira-smoke/AGENTS.md
           test -f mira-smoke/docs/ai/skills.md
+          test -f mira-smoke/docs/ai/skills/daily-report.md
+          test -f mira-smoke/docs/reports/daily/README.md
           test -f mira-smoke/docs/governance/version-control.md
           test "$(tr -d '\r\n' < mira-smoke/VERSION)" = "0.1.0"
           grep -q 'Status: `PENDING`' mira-smoke/docs/ai/skills.md
+          grep -q 'branches: \[dev, prod\]' mira-smoke/.github/workflows/verify.yml
+          ! grep -q 'branches: \[main' mira-smoke/.github/workflows/verify.yml
           ! grep -q 'cli/mira.mjs' mira-smoke/.github/workflows/verify.yml
           node - <<'NODE'
           const p = require('./mira-smoke/package.json');
@@ -49,9 +53,13 @@ jobs:
           if (p.version !== '0.1.0') process.exit(1);
           if (!p.author.includes('Tomz') || !p.author.includes('Mira')) process.exit(1);
           if (c.versioning.currentVersion !== '0.1.0') process.exit(1);
-          if (c.versioning.seedVersion !== '0.2.0') process.exit(1);
+          if (c.versioning.seedVersion !== '0.3.0') process.exit(1);
           if (!c.targets.mobile || c.targets.pc) process.exit(1);
           if (!c.deployment.githubPages.enabled) process.exit(1);
           if (c.deployment.cloudflare.enabled) process.exit(1);
+          if (c.repository.provider !== 'github' || c.repository.url !== null) process.exit(1);
           if (c.workflow.developmentBranch !== 'dev' || c.workflow.productionBranch !== 'prod') process.exit(1);
+          if (c.workflow.usesMainForProductWork !== false) process.exit(1);
+          if (JSON.stringify(c.workflow.longLivedBranches) !== JSON.stringify(['dev', 'prod'])) process.exit(1);
+          if (c.workbench.dailyReport.skill !== 'docs/ai/skills/daily-report.md') process.exit(1);
           NODE
