@@ -7,6 +7,7 @@ import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
 const SEED_REPO = "https://github.com/dangjingtao/com-design-prototype.git";
+const AUTHORS = "Tomz <dangjingtao@gmail.com> & Mira <mira@tomz.io>";
 
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, stdio: "inherit", shell: false });
@@ -158,6 +159,8 @@ async function createPrototype(nameArg, args) {
     console.log("\nPlanting a new prototype...\n");
     run("git", ["clone", "--depth", "1", SEED_REPO, destination], process.cwd());
 
+    const seedVersion = readFileSync(resolve(destination, "VERSION"), "utf8").trim();
+
     rmSync(resolve(destination, ".git"), { recursive: true, force: true });
     rmSync(resolve(destination, "cli"), { recursive: true, force: true });
 
@@ -169,8 +172,16 @@ async function createPrototype(nameArg, args) {
     const configPath = resolve(destination, "prototype.config.json");
     const config = JSON.parse(readFileSync(configPath, "utf8"));
     const cfBase = cloudflareName(name);
+    const initialVersion = config.versioning?.initialProjectVersion || "0.1.0";
     config.project = { name, title };
     config.targets = { mobile: targets.has("mobile"), pc: targets.has("pc") };
+    config.versioning = {
+      strategy: "semver",
+      currentVersion: initialVersion,
+      seedVersion,
+      versionFile: "VERSION",
+      changelogFile: "CHANGELOG.md"
+    };
     config.deployment = {
       githubPages: {
         enabled: deployments.has("github")
@@ -186,10 +197,19 @@ async function createPrototype(nameArg, args) {
     };
     writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
 
+    writeFileSync(resolve(destination, "VERSION"), `${initialVersion}\n`);
+    writeFileSync(resolve(destination, "CHANGELOG.md"), `# Changelog\n\n## [${initialVersion}]\n\n### Added\n\n- Project created from Com Design Prototype seed ${seedVersion}.\n- Initial PC / Mobile prototype baseline.\n- Default work ledger, AI skill interview and CI/CD contracts.\n`);
+
     const packagePath = resolve(destination, "package.json");
     const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
     packageJson.name = name;
+    packageJson.version = initialVersion;
     packageJson.private = true;
+    packageJson.author = AUTHORS;
+    packageJson.contributors = [
+      "Tomz <dangjingtao@gmail.com>",
+      "Mira <mira@tomz.io>"
+    ];
     delete packageJson.bin;
     if (!targets.has("mobile")) {
       delete packageJson.scripts["dev:mobile"];
@@ -210,7 +230,7 @@ async function createPrototype(nameArg, args) {
       writeFileSync(resolve(appDir, ".env.production"), `${base}VITE_APP_ENV=production\n`);
     }
 
-    writeFileSync(resolve(destination, "README.md"), `# ${title}\n\nGenerated from **Com Design Prototype** by Mira.\n\n> Mira plants. Com Design shapes. Prototype proves.\n\n## Start\n\n\`\`\`bash\nnpm install\n${targets.has("mobile") ? "npm run dev:mobile\n" : ""}${targets.has("pc") ? "npm run dev:pc\n" : ""}\`\`\`\n\n## CI/CD\n\nPush this project to GitHub, then run:\n\n\`\`\`bash\n${deployments.has("cloudflare") ? "export CLOUDFLARE_ACCOUNT_ID=...\nexport CLOUDFLARE_API_TOKEN=...\n" : ""}mira setup cicd\n\`\`\`\n\n\`dev\` continuously publishes preview deployments. \`prod\` publishes production.\n\nRead \`docs/product/00-product-brief.md\`, then keep work in \`docs/workbench/00-work-ledger.md\`.\n`);
+    writeFileSync(resolve(destination, "README.md"), `# ${title}\n\nGenerated from **Com Design Prototype** by Mira.\n\n> Mira plants. Com Design shapes. Prototype proves.\n\nAuthors: ${AUTHORS}\n\n## Start\n\n\`\`\`bash\nnpm install\n${targets.has("mobile") ? "npm run dev:mobile\n" : ""}${targets.has("pc") ? "npm run dev:pc\n" : ""}\`\`\`\n\n## First AI review\n\nBefore substantial AI work, read \`AGENTS.md\` and confirm \`docs/ai/skills.md\` through an interactive AI interview.\n\n## Version control\n\nCurrent version: \`${initialVersion}\`. Keep \`VERSION\`, \`package.json.version\` and \`CHANGELOG.md\` in sync. See \`docs/governance/version-control.md\`.\n\n## CI/CD\n\nPush this project to GitHub, then run:\n\n\`\`\`bash\n${deployments.has("cloudflare") ? "export CLOUDFLARE_ACCOUNT_ID=...\nexport CLOUDFLARE_API_TOKEN=...\n" : ""}mira setup cicd\n\`\`\`\n\n\`dev\` continuously publishes preview deployments. \`prod\` publishes production.\n\nRead \`docs/product/00-product-brief.md\`, then keep work in \`docs/workbench/00-work-ledger.md\`.\n`);
 
     run("git", ["init", "-b", "dev"], destination);
 
@@ -224,7 +244,7 @@ async function createPrototype(nameArg, args) {
     if (targets.has("mobile")) console.log("  npm run dev:mobile");
     if (targets.has("pc")) console.log("  npm run dev:pc");
     if (deployments.size > 0) console.log("\nAfter pushing to GitHub: mira setup cicd");
-    console.log("\nNext: fill docs/product/00-product-brief.md and start T001.\n");
+    console.log("\nNext: fill the Product Brief, let AI run the Skill Interview, then start T001.\n");
   } finally {
     rl.close();
   }
