@@ -55,16 +55,35 @@
 
 开发阶段允许用 URL query `?view=` 或 PrototypePanel 切换状态。
 
-## Git / 版本控制
+## Git / Repository / 版本控制
 
 详细规则见 `docs/governance/version-control.md`。
 
-默认分支：
+### 业务项目长期分支
+
+只有两条：
 
 - `dev`：日常整合、持续验证、预览部署
 - `prod`：经过明确验收后用于正式预览 / 发布
 
-默认版本规则：
+**生成后的业务项目不使用 `main` 作为工作、集成或发布分支。**
+
+短生命周期 `task/*` / `fix/*` 分支可以存在，但最终合回 `dev`；正式发布从 `prod` 产生。
+
+### GitHub repository
+
+`prototype.config.json.repository.url` 可以初始为空。
+
+如果为空且项目需要 GitHub，AI 应在 Skill Interview 中询问用户；用户可以直接在对话中粘贴 repository URL。
+
+拿到 URL 后：
+
+1. 校验 URL 指向正确仓库。
+2. 写入 `prototype.config.json.repository.url`。
+3. 只有用户已授权 Git 写操作时，才设置或更新 `origin`。
+4. 不因为 GitHub 默认分支习惯而额外引入 `main` 产品工作流。
+
+### 版本规则
 
 - 使用 SemVer：`MAJOR.MINOR.PATCH`
 - `VERSION` 是项目版本的人类可读基线
@@ -86,18 +105,34 @@
 - 每次状态变化至少留下一个可追踪证据：commit / PR / 页面路径 / 截图说明 / CI run / 明确评审结论之一。
 - 需求变化不得覆盖旧结论；保留变更记录并指出替代关系。
 
+## Daily Report Skill
+
+规则见 `docs/ai/skills/daily-report.md`。
+
+当用户要求“日报 / 今日项目总结 / 今日实际改动”时：
+
+1. 读取当天 `dev` commit；如 `prod` 当天有发布，也读取 `prod`。
+2. 读取总台账与当天涉及的任务卡。
+3. 对账 commit ↔ task card，不把任务卡文字本身当完成证据。
+4. 把没有任务卡归属的 commit 标为“未归档改动”。
+5. 把任务卡声称完成但缺乏证据的项目标为“状态待核验”。
+6. 输出或更新 `docs/reports/daily/YYYY-MM-DD.md`。
+7. 未明确授权时，只生成日报，不自动改 PASS、不升级版本、不部署、不 commit / push。
+
 ## AI Skill Interview
 
 当 `docs/ai/skills.md` 为 `PENDING` 时：
 
 1. 先告诉用户需要为当前项目确认 AI 协作技能。
 2. 采用自然的交互式问答，不一次丢出长表单；每轮优先确认 1–2 个关键问题。
-3. 至少确认：
+3. 如果使用 GitHub，允许用户直接粘贴 repository URL；没有仓库也不阻塞初始化。
+4. 至少确认：
    - AI 在本项目承担哪些角色（产品 / UI / 前端 / 测试 / Review / 文档 / 发布等）
    - 允许使用哪些工具与外部连接（GitHub、浏览器、设计工具、部署平台等）
    - 是否允许 AI 直接改代码、提交、开 PR、更新台账、部署
+   - 是否启用 `daily-report`，以及日报是否允许自动 commit / push
    - 当前产品最重要的验证目标与禁止越界事项
-   - 是否需要项目专属技能或领域知识
-4. 根据答案给出建议技能清单，明确区分“用户已确认”和“AI 建议”。
-5. 用户确认后把 `docs/ai/skills.md` 改为 `CONFIRMED`，记录日期、适用范围、技能、权限和限制。
-6. 后续需求明显改变协作边界时，把状态改为 `REVIEW_REQUIRED`，重新通过问答确认，不静默扩权。
+   - 是否需要其他项目专属技能或领域知识
+5. 根据答案给出建议技能清单，明确区分“用户已确认”和“AI 建议”。
+6. 用户确认后把 `docs/ai/skills.md` 改为 `CONFIRMED`，记录日期、适用范围、技能、权限和限制。
+7. 后续需求明显改变协作边界时，把状态改为 `REVIEW_REQUIRED`，重新通过问答确认，不静默扩权。
