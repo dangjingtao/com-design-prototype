@@ -18,7 +18,9 @@ jobs:
       - run: npm install
       - run: npm run typecheck
       - run: npm run build
-      - name: Smoke test Mira CLI
+      - name: Check Mira CLI syntax
+        run: node --check cli/mira.mjs
+      - name: Smoke test Mira project generation
         shell: bash
         run: |
           node cli/mira.mjs create prototype mira-smoke --no-install --title="Smoke Prototype" --targets=mobile --deploy=github
@@ -26,4 +28,10 @@ jobs:
           test ! -d mira-smoke/apps/pc
           test -f mira-smoke/.github/workflows/deploy-github-pages.yml
           test ! -f mira-smoke/.github/workflows/deploy-cloudflare.yml
-          node -e "const c=require('./mira-smoke/prototype.config.json'); if(!c.targets.mobile || c.targets.pc || !c.deployment.githubPages || c.deployment.cloudflare) process.exit(1)"
+          node - <<'NODE'
+          const c = require('./mira-smoke/prototype.config.json');
+          if (!c.targets.mobile || c.targets.pc) process.exit(1);
+          if (!c.deployment.githubPages.enabled) process.exit(1);
+          if (c.deployment.cloudflare.enabled) process.exit(1);
+          if (c.workflow.developmentBranch !== 'dev' || c.workflow.productionBranch !== 'prod') process.exit(1);
+          NODE
