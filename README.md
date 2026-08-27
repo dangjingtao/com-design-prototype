@@ -24,6 +24,28 @@ npm install -g github:dangjingtao/com-design-prototype
 mira create prototype
 ```
 
+CLI 会询问项目名、产品名、端侧和部署方式。
+
+也可以直接参数化，适合 AI / shell 自动创建：
+
+```bash
+mira create prototype demo \
+  --title="Demo Product" \
+  --targets=mobile,pc \
+  --deploy=github,cloudflare
+```
+
+只生成 Mobile：
+
+```bash
+mira create prototype demo-mobile \
+  --title="Demo Mobile" \
+  --targets=mobile \
+  --deploy=github
+```
+
+如只想生成文件、不立即安装依赖，加 `--no-install`。
+
 也可以先克隆本仓库开发 CLI：
 
 ```bash
@@ -33,7 +55,7 @@ npm link
 mira create prototype
 ```
 
-生成器会询问项目名、产品名、端侧与部署方式，并创建一个新的独立 Git 仓库。
+生成后的项目会初始化为独立 Git 仓库，并以 `dev` 作为起始分支。
 
 ## Seed 开发
 
