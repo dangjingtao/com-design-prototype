@@ -67,12 +67,18 @@ function readConfig(cwd) {
   return JSON.parse(readFileSync(configPath, "utf8"));
 }
 
+function githubRepoFromUrl(value) {
+  if (!value) return "";
+  const normalized = value.trim().replace(/\.git$/i, "");
+  const match = normalized.match(/github\.com[/:]([^/]+)\/([^/]+)$/i);
+  return match ? `${match[1]}/${match[2]}` : "";
+}
+
 function detectGitHubRepo(cwd) {
   const remote = capture("git", ["config", "--get", "remote.origin.url"], cwd);
   if (remote.status === 0) {
-    const value = remote.stdout.trim();
-    const match = value.match(/github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/i);
-    if (match) return `${match[1]}/${match[2]}`;
+    const repo = githubRepoFromUrl(remote.stdout.trim());
+    if (repo) return repo;
   }
 
   const gh = capture("gh", ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd);
@@ -208,6 +214,7 @@ async function createPrototype(nameArg, args) {
     const cfBase = cloudflareName(name);
     const initialVersion = config.versioning?.initialProjectVersion || "0.1.0";
     config.project = { name, title };
+    config.repository = config.repository || { provider: "github", url: null };
     config.targets = { mobile: targets.has("mobile"), pc: targets.has("pc") };
     config.versioning = {
       strategy: "semver",
@@ -232,7 +239,7 @@ async function createPrototype(nameArg, args) {
     writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
 
     writeFileSync(resolve(destination, "VERSION"), `${initialVersion}\n`);
-    writeFileSync(resolve(destination, "CHANGELOG.md"), `# Changelog\n\n## [${initialVersion}]\n\n### Added\n\n- Project created from Com Design Prototype seed ${seedVersion}.\n- Initial PC / Mobile prototype baseline.\n- Default work ledger, AI skill interview and CI/CD contracts.\n`);
+    writeFileSync(resolve(destination, "CHANGELOG.md"), `# Changelog\n\n## [${initialVersion}]\n\n### Added\n\n- Project created from Com Design Prototype seed ${seedVersion}.\n- Initial PC / Mobile prototype baseline.\n- dev / prod branch contract.\n- Default work ledger, AI skill interview, Daily Report Skill and CI/CD contracts.\n`);
 
     const packagePath = resolve(destination, "package.json");
     const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
@@ -264,7 +271,7 @@ async function createPrototype(nameArg, args) {
       writeFileSync(resolve(appDir, ".env.production"), `${base}VITE_APP_ENV=production\n`);
     }
 
-    writeFileSync(resolve(destination, "README.md"), `# ${title}\n\nGenerated from **Com Design Prototype** by Mira.\n\n> Mira plants. Com Design shapes. Prototype proves.\n\nAuthors: ${AUTHORS}\n\n## Start\n\n\`\`\`bash\nnpm install\n${targets.has("mobile") ? "npm run dev:mobile\n" : ""}${targets.has("pc") ? "npm run dev:pc\n" : ""}\`\`\`\n\n## First AI review\n\nBefore substantial AI work, read \`AGENTS.md\` and confirm \`docs/ai/skills.md\` through an interactive AI interview.\n\n## Version control\n\nCurrent version: \`${initialVersion}\`. Keep \`VERSION\`, \`package.json.version\` and \`CHANGELOG.md\` in sync. See \`docs/governance/version-control.md\`.\n\n## CI/CD\n\nPush this project to GitHub, then run:\n\n\`\`\`bash\n${deployments.has("cloudflare") ? "export CLOUDFLARE_ACCOUNT_ID=...\nexport CLOUDFLARE_API_TOKEN=...\n" : ""}mira setup cicd\n\`\`\`\n\n\`dev\` continuously publishes preview deployments. \`prod\` publishes production.\n\nRead \`docs/product/00-product-brief.md\`, then keep work in \`docs/workbench/00-work-ledger.md\`.\n`);
+    writeFileSync(resolve(destination, "README.md"), `# ${title}\n\nGenerated from **Com Design Prototype** by Mira.\n\n> Mira plants. Com Design shapes. Prototype proves.\n\nAuthors: ${AUTHORS}\n\n## Start\n\n\`\`\`bash\nnpm install\n${targets.has("mobile") ? "npm run dev:mobile\n" : ""}${targets.has("pc") ? "npm run dev:pc\n" : ""}\`\`\`\n\n## First AI review\n\nBefore substantial AI work, read \`AGENTS.md\` and confirm \`docs/ai/skills.md\` through an interactive AI interview. If a GitHub repository already exists, paste its URL in that conversation; the AI records it in \`prototype.config.json.repository.url\`.\n\n## Branches\n\nLong-lived product branches are \`dev\` and \`prod\` only. \`main\` is not part of the product workflow.\n\n## Daily report\n\nUse \`docs/ai/skills/daily-report.md\` to reconcile same-day commits with ledger/task-card reality and write \`docs/reports/daily/YYYY-MM-DD.md\`.\n\n## Version control\n\nCurrent version: \`${initialVersion}\`. Keep \`VERSION\`, \`package.json.version\` and \`CHANGELOG.md\` in sync. See \`docs/governance/version-control.md\`.\n\n## CI/CD\n\nAfter the GitHub repository is confirmed, run:\n\n\`\`\`bash\n${deployments.has("cloudflare") ? "export CLOUDFLARE_ACCOUNT_ID=...\nexport CLOUDFLARE_API_TOKEN=...\n" : ""}mira setup cicd\n\`\`\`\n\n\`dev\` continuously publishes preview deployments. \`prod\` publishes production.\n\nRead \`docs/product/00-product-brief.md\`, then keep work in \`docs/workbench/00-work-ledger.md\`.\n`);
 
     run("git", ["init", "-b", "dev"], destination);
 
@@ -277,8 +284,9 @@ async function createPrototype(nameArg, args) {
     console.log(`  cd ${name}`);
     if (targets.has("mobile")) console.log("  npm run dev:mobile");
     if (targets.has("pc")) console.log("  npm run dev:pc");
-    if (deployments.size > 0) console.log("\nAfter pushing to GitHub: mira setup cicd");
-    console.log("\nNext: fill the Product Brief, let AI run the Skill Interview, then start T001.\n");
+    console.log("\nNext: let AI run the Skill Interview; paste the GitHub repository URL there if one already exists.");
+    if (deployments.size > 0) console.log("After repository confirmation: mira setup cicd");
+    console.log("\nThen fill the Product Brief and start T001.\n");
   } finally {
     rl.close();
   }
@@ -287,8 +295,8 @@ async function createPrototype(nameArg, args) {
 async function setupCicd(args) {
   const cwd = process.cwd();
   const config = readConfig(cwd);
-  const repo = flagValue(args, "--repo") || detectGitHubRepo(cwd);
-  if (!repo) throw new Error("Could not detect a GitHub repository. Add origin or pass --repo=owner/name.");
+  const repo = flagValue(args, "--repo") || githubRepoFromUrl(config.repository?.url) || detectGitHubRepo(cwd);
+  if (!repo) throw new Error("Could not determine the GitHub repository. Paste the repository URL during the AI Skill Interview, configure origin, or pass --repo=owner/name.");
 
   const gh = capture("gh", ["auth", "status"], cwd);
   if (gh.status !== 0) throw new Error("GitHub CLI is not authenticated. Run: gh auth login");
