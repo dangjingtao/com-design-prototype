@@ -25,15 +25,27 @@ function csv(value) {
   return new Set(value.split(",").map(item => item.trim().toLowerCase()).filter(Boolean));
 }
 
-async function createPrototype(nameArg, flags) {
+function flagValue(args, name) {
+  const prefix = `${name}=`;
+  const item = args.find(arg => arg.startsWith(prefix));
+  return item ? item.slice(prefix.length) : undefined;
+}
+
+async function createPrototype(nameArg, args) {
   const rl = createInterface({ input, output });
   try {
-    const rawName = nameArg || await rl.question("Project name: ");
+    const rawName = nameArg || flagValue(args, "--name") || await rl.question("Project name: ");
     const name = npmName(rawName);
-    const titleInput = await rl.question(`Product title (${rawName || name}): `);
+
+    const titleFlag = flagValue(args, "--title");
+    const titleInput = titleFlag ?? await rl.question(`Product title (${rawName || name}): `);
     const title = titleInput.trim() || rawName || name;
-    const targets = csv(await rl.question("Targets [mobile,pc]: ") || "mobile,pc");
-    const deployments = csv(await rl.question("Deploy [github,cloudflare]: ") || "github,cloudflare");
+
+    const targetsInput = flagValue(args, "--targets") ?? await rl.question("Targets [mobile,pc]: ");
+    const targets = csv(targetsInput || "mobile,pc");
+
+    const deployInput = flagValue(args, "--deploy") ?? await rl.question("Deploy [github,cloudflare]: ");
+    const deployments = csv(deployInput || "github,cloudflare");
 
     if (!targets.has("mobile") && !targets.has("pc")) {
       throw new Error("At least one target is required: mobile or pc.");
@@ -91,7 +103,7 @@ async function createPrototype(nameArg, flags) {
 
     run("git", ["init", "-b", "dev"], destination);
 
-    if (!flags.has("--no-install")) {
+    if (!args.includes("--no-install")) {
       const npm = process.platform === "win32" ? "npm.cmd" : "npm";
       run(npm, ["install"], destination);
     }
@@ -107,14 +119,13 @@ async function createPrototype(nameArg, flags) {
 }
 
 const args = process.argv.slice(2);
-const flags = new Set(args.filter(arg => arg.startsWith("--")));
 const positional = args.filter(arg => !arg.startsWith("--"));
 
 if (positional[0] === "create" && positional[1] === "prototype") {
-  createPrototype(positional[2], flags).catch(error => {
+  createPrototype(positional[2], args).catch(error => {
     console.error(`\nMira could not plant this prototype: ${error.message}\n`);
     process.exit(1);
   });
 } else {
-  console.log(`Mira CLI\n\nUsage:\n  mira create prototype [name] [--no-install]\n`);
+  console.log(`Mira CLI\n\nUsage:\n  mira create prototype [name]\n\nOptions:\n  --title=\"Product title\"\n  --targets=mobile,pc\n  --deploy=github,cloudflare\n  --no-install\n`);
 }
