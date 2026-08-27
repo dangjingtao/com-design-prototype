@@ -14,7 +14,12 @@ Status: `PENDING`
 
 AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前项目最关键的 1–2 个问题开始。
 
-### 0. 项目仓库
+### 0. 项目身份与仓库
+
+先确认项目本身：
+
+- `prototype.config.json.project.name` 是否是正确项目名。
+- `prototype.config.json.project.title` 是否是正确产品展示名。
 
 如果项目使用 GitHub，询问用户是否已有仓库。
 
@@ -27,6 +32,19 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 2. 写入 `prototype.config.json.repository.url`。
 3. 只有在用户允许修改 Git 配置时，才设置 / 更新 `origin`。
 4. 业务项目长期分支只使用 `dev` / `prod`，不建立 `main` 工作流。
+
+### 0.1 Contributors / GitHub Identity
+
+读取 `prototype.config.json.contributors` 与 `docs/governance/contributors.md`，然后通过问答确认当前项目贡献者。
+
+默认 Seed 作者身份：
+
+- Tomz <dangjingtao@gmail.com> → human owner → GitHub `@dangjingtao`（verified）
+- Mira <mira@tomz.io> → AI collaborator → GitHub account: none
+
+如果项目有其他 human contributor，询问其 GitHub login 或 profile URL；AI 应实际校验后再把 `github.verified` 写成 `true`。
+
+不要因为 Git commit name/email 相同就自行宣称 GitHub 身份已验证。
 
 ### 1. AI 角色
 
@@ -43,6 +61,8 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 - Documentation
 - Git / Release
 - CI/CD / Deployment
+- Daily Report
+- Daily Report Review
 
 ### 2. 工具与连接
 
@@ -62,6 +82,7 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 - 修改代码
 - 修改产品文档
 - 创建 / 更新任务卡与台账
+- 更新 contributor identity
 - commit / push
 - 创建 PR
 - 合并 PR
@@ -69,6 +90,9 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 - 触发或配置 CI/CD
 - 部署 preview
 - 部署 production
+- 生成日报
+- 查收 / 复核日报
+- 把日报或查收结果写回项目
 
 ### 4. 验证目标
 
@@ -96,7 +120,8 @@ AI 应自然地逐步确认，不要一次抛出长表单。优先围绕当前�
 
 Seed 内置可供确认的 Skill：
 
-- `daily-report`：根据当天 commit + 台账 / 任务卡实际情况生成项目日报，规则见 `docs/ai/skills/daily-report.md`。
+- `daily-report`：根据当天 GitHub commit + 台账 / 任务卡实际情况生成项目日报，规则见 `docs/ai/skills/daily-report.md`。
+- `daily-report-review`：回查日报与 GitHub / 任务卡 / CI 的一致性，规则见 `docs/ai/skills/daily-report-review.md`。
 
 也可以根据项目需要增加其他稳定名称，例如：
 
@@ -109,11 +134,13 @@ Seed 内置可供确认的 Skill：
 
 除了 Seed 已提供的能力外，其余名字只是建议，不代表默认启用。
 
-对于 `daily-report`，至少确认：
+对于日报相关能力，至少确认：
 
-- 是否启用
+- 是否启用 `daily-report`
+- 是否启用 `daily-report-review`
 - 日报面向谁阅读
 - 是否允许 AI 仅生成 Markdown，还是也允许自动 commit / push
+- 查收结果只在对话返回，还是允许追加到原日报
 - 如本地日期 / 工作时区不明确，使用哪个时区作为“当天”边界
 
 ---
@@ -125,8 +152,12 @@ Seed 内置可供确认的 Skill：
 - Status: `PENDING`
 - Confirmed at: -
 - Confirmed by: -
+- Project name: -
+- Project title: -
 - Project goal: -
 - GitHub repository: -
+- Confirmed human contributors: -
+- Confirmed AI collaborators: -
 
 ### Confirmed skills
 
@@ -159,7 +190,7 @@ Seed 内置可供确认的 Skill：
 - 产品阶段明显变化
 - AI 获得新的写入 / 发布权限
 - 新接入外部工具或账号
-- GitHub repository / 分支策略发生变化
+- GitHub repository / contributor identity / 分支策略发生变化
 - 从 prototype 进入 production engineering
 - 用户明确要求重做技能配置
 
