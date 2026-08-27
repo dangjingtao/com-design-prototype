@@ -28,9 +28,31 @@
 
 1. `VERSION`
 2. `package.json.version`
-3. `CHANGELOG.md`
+3. `prototype.config.json.versioning.currentVersion`
+4. `CHANGELOG.md`
+
+## Repository
+
+业务项目可以先在本地生成，不要求预先创建 GitHub repository。
+
+如果项目需要接入 GitHub：
+
+- 在 AI Skill Interview 中直接向 AI 提供 repository URL 即可。
+- URL 记录到 `prototype.config.json.repository.url`。
+- 设置 / 修改 Git `origin` 属于写操作，应遵循 AI Skill Profile 中的授权。
 
 ## 分支合同
+
+生成后的业务项目只有两条长期分支：
+
+```text
+dev  → 日常施工 / 集成 / CI / preview
+prod → 验收基线 / production deployment
+```
+
+**不使用 `main` 参与业务项目的开发、集成或发布。**
+
+GitHub repository 即使初始默认创建了 `main`，也不应把它引入实际工作流。项目初始化完成后，应以 `dev` 作为日常工作分支，以 `prod` 作为正式发布分支；是否删除远端空 `main` 由用户决定。
 
 ### `dev`
 
@@ -60,6 +82,18 @@ fix/T031-empty-state
 - CI 绿只是必要条件，不是充分验收条件
 - production deployment 从该分支产生
 
+### 不使用 `main`
+
+对于生成后的业务项目：
+
+- CI 不监听 `main`
+- preview 不从 `main` 部署
+- production 不从 `main` 部署
+- 任务不以 `main` 为目标分支
+- 日报默认根据 `dev`，以及当天有发布时的 `prod`，整理实际改动
+
+Seed 仓库自身如何维护不改变上述业务项目合同。
+
 ## 发布与 Tag
 
 当某个版本形成可复现的验收基线：
@@ -87,45 +121,3 @@ Tag 名必须与 `VERSION` 一致。
 ```text
 feat: T023 add team performance prototype
 ```
-
-不要求为了格式牺牲可读性。
-
-## CHANGELOG 规则
-
-每个版本记录：
-
-- Added
-- Changed
-- Fixed
-- Removed（如有）
-- Breaking / Migration（如有）
-
-只记录对产品验证、协作合同、部署或工程行为有意义的变化；不要把每个 commit 原样复制进去。
-
-## AI 权限
-
-AI 可以：
-
-- 读取当前版本并判断任务目标版本
-- 建议版本升级类型
-- 更新 `CHANGELOG.md`
-- 在获得授权时同步 `VERSION` / `package.json.version`
-
-AI 默认不可以：
-
-- 仅因为代码完成就擅自发布新版本
-- 未经确认直接把 `dev` 推进 `prod`
-- 擅自创建 production tag
-
-是否允许自动版本推进，应在 `docs/ai/skills.md` 中明确确认。
-
-## 回滚
-
-原型遇到问题时优先通过 Git commit / tag 回滚，不用覆盖历史文件制造“看起来没发生过”的状态。
-
-如果产品结论被推翻：
-
-1. 保留原任务 / 决策记录
-2. 新增替代结论
-3. 在 CHANGELOG / 台账写清影响版本
-4. 必要时新增任务完成迁移或回退
