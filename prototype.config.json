@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "project": {
     "name": "com-design-prototype",
     "title": "Com Design Prototype"
@@ -13,12 +13,23 @@
     "icons": "lucide"
   },
   "deployment": {
-    "githubPages": true,
-    "cloudflare": true
+    "githubPages": {
+      "enabled": false
+    },
+    "cloudflare": {
+      "enabled": false,
+      "provider": "pages",
+      "projects": {
+        "mobile": "com-design-prototype-mobile",
+        "pc": "com-design-prototype-pc"
+      }
+    }
   },
   "workflow": {
     "developmentBranch": "dev",
-    "productionBranch": "prod"
+    "productionBranch": "prod",
+    "previewEnvironment": "preview",
+    "productionEnvironment": "production"
   },
   "workbench": {
     "enabled": true,
